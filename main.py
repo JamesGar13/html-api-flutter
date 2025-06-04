@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import subprocess
+from fastapi.responses import HTMLResponse
+
+
 
 app = FastAPI()
 
@@ -31,6 +34,6 @@ def run_html_code(input: CodeInput):
             f.write(input.code)
 
         # Запускаємо у браузері або повертаємо HTML-рядок
-        return {"output": input.code}
+        return HTMLResponse(content=input.code)
     except Exception as e:
         return {"error": str(e)}
