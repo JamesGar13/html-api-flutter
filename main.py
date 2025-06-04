@@ -1,31 +1,36 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+import subprocess
 
 app = FastAPI()
 
-# Дозволити запити з Flutter
+# Дозволяємо CORS для Flutter-додатку
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # у продакшені вкажи точний домен
-    allow_credentials=True,
+    allow_origins=["*"],  # Заміни "*" на адресу твого додатку
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class CodeRequest(BaseModel):
+# 🟢 Головна сторінка (для перевірки)
+@app.get("/")
+def read_root():
+    return {"message": "API для виконання HTML-коду запущено."}
+
+# 🔵 Модель для запиту
+class CodeInput(BaseModel):
     code: str
 
+# 🔴 Ендпоінт для запуску HTML-коду
 @app.post("/run-html")
-async def run_html_code(request: CodeRequest):
-    html_code = request.code.strip()
+def run_html_code(input: CodeInput):
+    try:
+        # Зберігаємо код у файл
+        with open("temp.html", "w", encoding="utf-8") as f:
+            f.write(input.code)
 
-    if not html_code:
-        return {"result": "Надішліть HTML-код"}
-
-    return {
-        "result": f"""<div style="border:1px solid #ccc;padding:10px;margin:10px;">
-            <strong>Вивід HTML:</strong><br>
-            {html_code}
-        </div>"""
-    }
+        # Запускаємо у браузері або повертаємо HTML-рядок
+        return {"output": input.code}
+    except Exception as e:
+        return {"error": str(e)}
